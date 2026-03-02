@@ -31,17 +31,18 @@ class AdminCB(CallbackData, prefix="adm"):
 BUTTON_YOUTUBE = "\U0001f3ac YouTube"
 BUTTON_AI = "\U0001f916 AI"
 BUTTON_SUPPORT = "\U0001f4de \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430"
+BUTTON_ADMIN = "\u2699\ufe0f \u0410\u0434\u043c\u0438\u043d"
 
 
-def main_menu_reply_kb() -> ReplyKeyboardMarkup:
+def main_menu_reply_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
     """Reply-клавиатура которая всегда видна внизу."""
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=BUTTON_YOUTUBE), KeyboardButton(text=BUTTON_AI)],
-            [KeyboardButton(text=BUTTON_SUPPORT)],
-        ],
-        resize_keyboard=True,
-    )
+    keyboard = [
+        [KeyboardButton(text=BUTTON_YOUTUBE), KeyboardButton(text=BUTTON_AI)],
+        [KeyboardButton(text=BUTTON_SUPPORT)],
+    ]
+    if is_admin:
+        keyboard.append([KeyboardButton(text=BUTTON_ADMIN)])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def category_products_kb(
@@ -108,7 +109,11 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
         text="\U0001f4ca \u0417\u0430\u043a\u0430\u0437\u044b",
         callback_data=AdminCB(action="orders"),
     )
-    builder.adjust(2)
+    builder.button(
+        text="\U0001f4c8 \u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430",
+        callback_data=AdminCB(action="stats"),
+    )
+    builder.adjust(2, 2, 1)
     return builder.as_markup()
 
 

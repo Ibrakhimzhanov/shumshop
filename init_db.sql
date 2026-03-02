@@ -29,6 +29,14 @@ CREATE TABLE IF NOT EXISTS orders (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Users (статистика)
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY,
+    username VARCHAR(100),
+    full_name VARCHAR(200),
+    started_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Settings (key-value)
 CREATE TABLE IF NOT EXISTS settings (
     key VARCHAR(100) PRIMARY KEY,

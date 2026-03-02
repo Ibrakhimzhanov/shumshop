@@ -143,6 +143,31 @@ async def get_recent_orders(
     )
 
 
+# --- Users ---
+
+
+async def save_user(pool: asyncpg.Pool, user_id: int, username: str | None, full_name: str | None) -> None:
+    await pool.execute(
+        "INSERT INTO users (id, username, full_name) VALUES ($1, $2, $3) "
+        "ON CONFLICT (id) DO UPDATE SET username = $2, full_name = $3",
+        user_id,
+        username,
+        full_name,
+    )
+
+
+async def get_users_count(pool: asyncpg.Pool) -> int:
+    row = await pool.fetchrow("SELECT COUNT(*) AS cnt FROM users")
+    return row["cnt"]
+
+
+async def get_today_users_count(pool: asyncpg.Pool) -> int:
+    row = await pool.fetchrow(
+        "SELECT COUNT(*) AS cnt FROM users WHERE started_at::date = CURRENT_DATE"
+    )
+    return row["cnt"]
+
+
 # --- Settings ---
 
 

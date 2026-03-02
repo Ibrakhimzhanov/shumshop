@@ -27,6 +27,8 @@ from bot.models import (
     get_recent_orders,
     get_setting,
     set_setting,
+    get_users_count,
+    get_today_users_count,
 )
 
 router = Router()
@@ -495,6 +497,45 @@ async def process_edit_setting(message: Message, config, state: FSMContext, db_p
         reply_markup=builder.as_markup(),
         parse_mode="HTML",
     )
+
+
+# --- Stats ---
+
+
+@router.callback_query(AdminCB.filter(F.action == "stats"))
+async def cb_stats(callback: CallbackQuery, callback_data: AdminCB, config, db_pool):
+    if callback.from_user.id != config.admin_id:
+        return
+    total_users = await get_users_count(db_pool)
+    today_users = await get_today_users_count(db_pool)
+    total_orders = await db_pool.fetchrow("SELECT COUNT(*) AS cnt FROM orders")
+    approved_orders = await db_pool.fetchrow(
+        "SELECT COUNT(*) AS cnt FROM orders WHERE status = 'approved'"
+    )
+    pending_orders = await db_pool.fetchrow(
+        "SELECT COUNT(*) AS cnt FROM orders WHERE status = 'pending'"
+    )
+    total_revenue = await db_pool.fetchrow(
+        "SELECT COALESCE(SUM(p.price), 0) AS total "
+        "FROM orders o JOIN products p ON o.product_id = p.id "
+        "WHERE o.status = 'approved'"
+    )
+    text = (
+        "\U0001f4c8 <b>\u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430</b>\n\n"
+        f"\U0001f465 \u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u0439 \u0432\u0441\u0435\u0433\u043e: <b>{total_users}</b>\n"
+        f"\U0001f195 \u041d\u043e\u0432\u044b\u0445 \u0441\u0435\u0433\u043e\u0434\u043d\u044f: <b>{today_users}</b>\n\n"
+        f"\U0001f4e6 \u0417\u0430\u043a\u0430\u0437\u043e\u0432 \u0432\u0441\u0435\u0433\u043e: <b>{total_orders['cnt']}</b>\n"
+        f"\u2705 \u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e: <b>{approved_orders['cnt']}</b>\n"
+        f"\u23f3 \u041e\u0436\u0438\u0434\u0430\u044e\u0442: <b>{pending_orders['cnt']}</b>\n\n"
+        f"\U0001f4b0 \u0412\u044b\u0440\u0443\u0447\u043a\u0430: <b>{total_revenue['total']:,} \u0441\u0443\u043c</b>"
+    )
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
+        callback_data=AdminCB(action="admin_back"),
+    )
+    await callback.message.edit_text(text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    await callback.answer()
 
 
 # --- Orders ---
