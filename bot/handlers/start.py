@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
 from bot.keyboards import main_menu_kb
 from bot.models import get_categories
@@ -13,6 +13,8 @@ WELCOME = "\U0001f44b \u0414\u043e\u0431\u0440\u043e \u043f\u043e\u0436\u0430\u0
 @router.message(CommandStart())
 async def cmd_start(message: Message, db_pool):
     categories = await get_categories(db_pool)
+    # Убираем старую reply-клавиатуру если была
+    await message.answer("\u2699\ufe0f \u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...", reply_markup=ReplyKeyboardRemove())
     await message.answer(WELCOME, reply_markup=main_menu_kb(categories))
 
 

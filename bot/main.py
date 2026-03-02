@@ -29,6 +29,17 @@ async def main() -> None:
     dp["db_pool"] = pool
     logger.info("Database pool created")
 
+    # Очищаем старые команды бота и ставим новые
+    from aiogram.types import BotCommand
+    await bot.set_my_commands([
+        BotCommand(command="start", description="\u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e"),
+    ])
+    await bot.delete_my_commands()
+    await bot.set_my_commands([
+        BotCommand(command="start", description="\u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e"),
+    ])
+    logger.info("Bot commands updated")
+
     try:
         logger.info("Bot starting...")
         await dp.start_polling(bot)
