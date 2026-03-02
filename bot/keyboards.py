@@ -1,5 +1,5 @@
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
@@ -28,23 +28,20 @@ class AdminCB(CallbackData, prefix="adm"):
     id: int = 0
 
 
-def main_menu_kb(categories: list | None = None) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    if categories:
-        for cat in categories:
-            builder.button(
-                text=cat["name"],
-                callback_data=CategoryCB(action="select", id=cat["id"]),
-            )
-    else:
-        builder.button(
-            text="\U0001f3ac YouTube", callback_data=CategoryCB(action="select", id=1)
-        )
-        builder.button(
-            text="\U0001f916 AI", callback_data=CategoryCB(action="select", id=2)
-        )
-    builder.adjust(2)
-    return builder.as_markup()
+BUTTON_YOUTUBE = "\U0001f3ac YouTube"
+BUTTON_AI = "\U0001f916 AI"
+BUTTON_SUPPORT = "\U0001f4de \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430"
+
+
+def main_menu_reply_kb() -> ReplyKeyboardMarkup:
+    """Reply-клавиатура которая всегда видна внизу."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BUTTON_YOUTUBE), KeyboardButton(text=BUTTON_AI)],
+            [KeyboardButton(text=BUTTON_SUPPORT)],
+        ],
+        resize_keyboard=True,
+    )
 
 
 def category_products_kb(
