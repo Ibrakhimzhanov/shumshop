@@ -65,8 +65,8 @@ ON CONFLICT DO NOTHING;
 
 -- Seed settings
 INSERT INTO settings (key, value) VALUES
-    ('card_number', ''),
-    ('card_holder', ''),
+    ('card_number', '9860 1601 2032 6477'),
+    ('card_holder', 'Asrorbek Ibrohimjonov'),
     ('work_hours', '9:00-23:00'),
     ('support_contact', '@shumbolaaisupport')
 ON CONFLICT (key) DO NOTHING;

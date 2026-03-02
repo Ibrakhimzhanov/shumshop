@@ -31,15 +31,15 @@ async def start_payment(callback: CallbackQuery, callback_data: PaymentCB, state
     price = f"{product['price']:,} \u0441\u0443\u043c"
 
     text = (
-        f"\U0001f4b3 \u041e\u043f\u043b\u0430\u0442\u0430: {product['name']}\n\n"
-        f"\u0421\u0443\u043c\u043c\u0430: {price}\n\n"
+        f"\U0001f6d2 <b>{product['name']}</b>\n"
+        f"\U0001f4b0 \u0421\u0443\u043c\u043c\u0430: <b>{price}</b>\n\n"
         f"\u041f\u0435\u0440\u0435\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430 \u043a\u0430\u0440\u0442\u0443:\n"
-        f"\U0001f4b3 {card_number}\n"
+        f"\U0001f4b3 <code>{card_number}</code>\n"
         f"\U0001f464 {card_holder}\n\n"
-        f"\u041f\u043e\u0441\u043b\u0435 \u043e\u043f\u043b\u0430\u0442\u044b \u043e\u0442\u043f\u0440\u0430\u0432\u044c\u0442\u0435 \u0441\u043a\u0440\u0438\u043d\u0448\u043e\u0442 \u0447\u0435\u043a\u0430 \u0441\u044e\u0434\u0430."
+        f"\u2757 \u041f\u043e\u0441\u043b\u0435 \u043e\u043f\u043b\u0430\u0442\u044b \u043e\u0442\u043f\u0440\u0430\u0432\u044c\u0442\u0435 \u0441\u043a\u0440\u0438\u043d\u0448\u043e\u0442 \u0447\u0435\u043a\u0430 \u0441\u044e\u0434\u0430."
     )
 
-    await callback.message.answer(text)
+    await callback.message.answer(text, parse_mode="HTML")
     await state.set_state(PaymentState.waiting_receipt)
     await state.update_data(product_id=callback_data.product_id)
     await callback.answer()
