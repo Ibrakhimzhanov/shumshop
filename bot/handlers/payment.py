@@ -20,15 +20,14 @@ class PaymentState(StatesGroup):
 
 
 @router.callback_query(PaymentCB.filter(F.action == "pay"))
-async def start_payment(callback: CallbackQuery, callback_data: PaymentCB, state: FSMContext, config):
-    pool = callback.bot["db_pool"]
-    product = await get_product(pool, callback_data.product_id)
+async def start_payment(callback: CallbackQuery, callback_data: PaymentCB, state: FSMContext, db_pool, config):
+    product = await get_product(db_pool, callback_data.product_id)
     if not product:
         await callback.answer("\u0422\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d", show_alert=True)
         return
 
-    card_number = await get_setting(pool, "card_number") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
-    card_holder = await get_setting(pool, "card_holder") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
+    card_number = await get_setting(db_pool, "card_number") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
+    card_holder = await get_setting(db_pool, "card_holder") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
     price = f"{product['price']:,} \u0441\u0443\u043c"
 
     text = (
@@ -47,12 +46,11 @@ async def start_payment(callback: CallbackQuery, callback_data: PaymentCB, state
 
 
 @router.message(PaymentState.waiting_receipt, F.photo)
-async def receive_receipt(message: Message, state: FSMContext, config):
-    pool = message.bot["db_pool"]
+async def receive_receipt(message: Message, state: FSMContext, db_pool, config):
     data = await state.get_data()
     product_id = data["product_id"]
 
-    product = await get_product(pool, product_id)
+    product = await get_product(db_pool, product_id)
     if not product:
         await message.answer("\u041e\u0448\u0438\u0431\u043a\u0430: \u0442\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.")
         await state.clear()
@@ -60,7 +58,7 @@ async def receive_receipt(message: Message, state: FSMContext, config):
 
     receipt_file_id = message.photo[-1].file_id
     order = await create_order(
-        pool,
+        db_pool,
         user_id=message.from_user.id,
         username=message.from_user.username,
         product_id=product_id,
@@ -91,12 +89,11 @@ async def receive_receipt(message: Message, state: FSMContext, config):
 
 
 @router.callback_query(OrderCB.filter(F.action == "approve"))
-async def approve_order(callback: CallbackQuery, callback_data: OrderCB):
-    pool = callback.bot["db_pool"]
+async def approve_order(callback: CallbackQuery, callback_data: OrderCB, db_pool):
     order_id = callback_data.order_id
 
-    await update_order_status(pool, order_id, "approved")
-    order = await get_order(pool, order_id)
+    await update_order_status(db_pool, order_id, "approved")
+    order = await get_order(db_pool, order_id)
     if not order:
         await callback.answer("\u0417\u0430\u043a\u0430\u0437 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d", show_alert=True)
         return
@@ -116,12 +113,11 @@ async def approve_order(callback: CallbackQuery, callback_data: OrderCB):
 
 
 @router.callback_query(OrderCB.filter(F.action == "reject"))
-async def reject_order(callback: CallbackQuery, callback_data: OrderCB):
-    pool = callback.bot["db_pool"]
+async def reject_order(callback: CallbackQuery, callback_data: OrderCB, db_pool):
     order_id = callback_data.order_id
 
-    await update_order_status(pool, order_id, "rejected")
-    order = await get_order(pool, order_id)
+    await update_order_status(db_pool, order_id, "rejected")
+    order = await get_order(db_pool, order_id)
     if not order:
         await callback.answer("\u0417\u0430\u043a\u0430\u0437 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d", show_alert=True)
         return

@@ -14,9 +14,8 @@ router = Router()
 
 
 @router.callback_query(CategoryCB.filter(F.action == "select"))
-async def show_category(callback: CallbackQuery, callback_data: CategoryCB):
-    pool = callback.bot["db_pool"]
-    products = await get_products_by_category(pool, callback_data.id)
+async def show_category(callback: CallbackQuery, callback_data: CategoryCB, db_pool):
+    products = await get_products_by_category(db_pool, callback_data.id)
     await callback.message.edit_text(
         "\U0001f4e6 \u0422\u043e\u0432\u0430\u0440\u044b:",
         reply_markup=category_products_kb(products, callback_data.id),
@@ -25,9 +24,8 @@ async def show_category(callback: CallbackQuery, callback_data: CategoryCB):
 
 
 @router.callback_query(ProductCB.filter(F.action == "view"))
-async def show_product(callback: CallbackQuery, callback_data: ProductCB):
-    pool = callback.bot["db_pool"]
-    product = await get_product(pool, callback_data.id)
+async def show_product(callback: CallbackQuery, callback_data: ProductCB, db_pool):
+    product = await get_product(db_pool, callback_data.id)
     if not product:
         await callback.answer("\u0422\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d", show_alert=True)
         return
@@ -44,11 +42,10 @@ async def show_product(callback: CallbackQuery, callback_data: ProductCB):
 
 
 @router.callback_query(ProductCB.filter(F.action == "back"))
-async def product_back(callback: CallbackQuery, callback_data: ProductCB):
-    pool = callback.bot["db_pool"]
-    product = await get_product(pool, callback_data.id)
+async def product_back(callback: CallbackQuery, callback_data: ProductCB, db_pool):
+    product = await get_product(db_pool, callback_data.id)
     if product:
-        products = await get_products_by_category(pool, product["category_id"])
+        products = await get_products_by_category(db_pool, product["category_id"])
         await callback.message.edit_text(
             "\U0001f4e6 \u0422\u043e\u0432\u0430\u0440\u044b:",
             reply_markup=category_products_kb(products, product["category_id"]),
@@ -57,9 +54,8 @@ async def product_back(callback: CallbackQuery, callback_data: ProductCB):
 
 
 @router.callback_query(CategoryCB.filter(F.action == "back"))
-async def back_to_categories(callback: CallbackQuery):
-    pool = callback.bot["db_pool"]
-    categories = await get_categories(pool)
+async def back_to_categories(callback: CallbackQuery, db_pool):
+    categories = await get_categories(db_pool)
     await callback.message.edit_text(
         "\U0001f44b \u0414\u043e\u0431\u0440\u043e \u043f\u043e\u0436\u0430\u043b\u043e\u0432\u0430\u0442\u044c \u0432 Shum Bola AI!\n\n\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0430\u0437\u0434\u0435\u043b:",
         reply_markup=main_menu_kb(categories),

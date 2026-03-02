@@ -26,7 +26,7 @@ async def main() -> None:
     dp.include_router(admin.router)
 
     pool = await create_pool(config)
-    bot["db_pool"] = pool
+    dp["db_pool"] = pool
     logger.info("Database pool created")
 
     try:
