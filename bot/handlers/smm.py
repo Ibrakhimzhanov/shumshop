@@ -117,11 +117,10 @@ async def smm_select_type(callback: CallbackQuery, callback_data: SmmTypeCB, con
         )
         return
 
-    # Pre-calculate prices and cap max at 5000
+    # Pre-calculate prices for display
     for s in services:
         rate_usd = float(s.get("rate", 0))
         s["price_sum"] = math.ceil(rate_usd * config.usd_rate * 1.5)
-        s["max"] = min(int(s.get("max", 0)), 5000)
 
     type_labels = {
         "views": "\U0001f441 \u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b",
@@ -170,7 +169,7 @@ async def smm_select_service(
 
     rate_usd = float(service.get("rate", 0))
     min_qty = int(service.get("min", 0))
-    max_qty = min(int(service.get("max", 0)), 5000)
+    max_qty = int(service.get("max", 0))
     name = service.get("name", "Service")
 
     price_per_1000 = math.ceil(rate_usd * config.usd_rate * 1.5)
@@ -265,6 +264,12 @@ async def smm_receive_quantity(message: Message, state: FSMContext, db_pool, con
     rate_usd = data["rate"]
     service_name = data["service_name"]
     total_price = math.ceil(quantity / 1000 * rate_usd * config.usd_rate * 1.5)
+
+    if total_price < 5000:
+        await message.answer(
+            "\u274c \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u0437\u0430\u043a\u0430\u0437\u0430 \u2014 5,000 \u0441\u0443\u043c. \u0423\u0432\u0435\u043b\u0438\u0447\u044c\u0442\u0435 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e."
+        )
+        return
 
     card_number = await get_setting(db_pool, "card_number") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
     card_holder = await get_setting(db_pool, "card_holder") or "\u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d"
