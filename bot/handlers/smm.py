@@ -120,7 +120,7 @@ async def smm_select_type(callback: CallbackQuery, callback_data: SmmTypeCB, con
     # Pre-calculate prices for display
     for s in services:
         rate_usd = float(s.get("rate", 0))
-        s["price_sum"] = math.ceil(rate_usd * config.usd_rate * 1.5)
+        s["price_sum"] = math.ceil(rate_usd * config.usd_rate * 15)
 
     type_labels = {
         "views": "\U0001f441 \u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b",
@@ -172,7 +172,7 @@ async def smm_select_service(
     max_qty = int(service.get("max", 0))
     name = service.get("name", "Service")
 
-    price_per_1000 = math.ceil(rate_usd * config.usd_rate * 1.5)
+    price_per_1000 = math.ceil(rate_usd * config.usd_rate * 15)
 
     text = (
         f"\U0001f4e6 <b>{name}</b>\n"
@@ -263,7 +263,7 @@ async def smm_receive_quantity(message: Message, state: FSMContext, db_pool, con
 
     rate_usd = data["rate"]
     service_name = data["service_name"]
-    total_price = math.ceil(quantity / 1000 * rate_usd * config.usd_rate * 1.5)
+    total_price = math.ceil(quantity / 1000 * rate_usd * config.usd_rate * 15)
 
     if total_price < 5000:
         await message.answer(
