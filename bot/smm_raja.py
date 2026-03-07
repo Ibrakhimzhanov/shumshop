@@ -21,12 +21,41 @@ async def get_services(api_key: str) -> list[dict]:
     return await _request(api_key, action="services")
 
 
+def _extract_features(name: str) -> str:
+    """Extract short feature label from service name.
+
+    E.g. 'YTL1 Youtube Likes (Life Time) [Instant] (100/100k) [500/day]' -> 'Lifetime | Instant'
+    """
+    import re
+    features = []
+
+    lower = name.lower()
+    if "life" in lower and "time" in lower:
+        features.append("Lifetime")
+    elif "r30" in lower or "30 day" in lower:
+        features.append("Refill 30d")
+    elif "[nr]" in lower:
+        features.append("No Refill")
+
+    if "instant" in lower:
+        features.append("Instant")
+    elif "guaranteed" in lower:
+        features.append("Guaranteed")
+
+    # Extract speed like {10k/day} or [1k/day]
+    speed = re.search(r"[\[{(](\d+k?/day)[\]})]]", lower)
+    if speed:
+        features.append(speed.group(1) + "/day" if "/day" not in speed.group(1) else speed.group(1))
+
+    return " | ".join(features) if features else ""
+
+
 async def get_youtube_services(api_key: str) -> dict[str, list[dict]]:
     services = await get_services(api_key)
 
     type_filters = {
         "views": lambda c: "view" in c and "live" not in c,
-        "likes": lambda c: "like" in c and "dislike" not in c,
+        "likes": lambda c: "like" in c,
         "subscribers": lambda c: "subscrib" in c,
         "comments": lambda c: "comment" in c,
         "shorts": lambda c: "short" in c,
@@ -46,7 +75,19 @@ async def get_youtube_services(api_key: str) -> dict[str, list[dict]]:
             and float(s.get("rate", 0)) > 0
         ]
         filtered.sort(key=lambda s: float(s["rate"]))
-        result[type_name] = filtered[:5]
+
+        # Pick 5 services with diverse prices (not all cheapest)
+        if len(filtered) > 5:
+            step = max(1, len(filtered) // 5)
+            picked = [filtered[i * step] for i in range(5) if i * step < len(filtered)]
+        else:
+            picked = filtered[:5]
+
+        # Add feature labels
+        for s in picked:
+            s["features"] = _extract_features(s.get("name", ""))
+
+        result[type_name] = picked
 
     return result
 
