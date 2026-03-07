@@ -31,16 +31,16 @@ def _extract_features(name: str) -> str:
 
     lower = name.lower()
     if "life" in lower and "time" in lower:
-        features.append("Lifetime")
+        features.append("Umrbod")
     elif "r30" in lower or "30 day" in lower:
-        features.append("Refill 30d")
+        features.append("30 kun kafolat")
     elif "[nr]" in lower:
-        features.append("No Refill")
+        features.append("Kafolatsiz")
 
     if "instant" in lower:
-        features.append("Instant")
+        features.append("Tezkor")
     elif "guaranteed" in lower:
-        features.append("Guaranteed")
+        features.append("Kafolatli")
 
     # Extract speed like {10k/day} or [1k/day]
     speed = re.search(r"[\[{(](\d+k?/day)[\]})]]", lower)
