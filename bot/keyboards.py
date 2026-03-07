@@ -112,16 +112,25 @@ def verify_number_kb(activation_id: int) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+_POPULAR_SERVICES = {
+    "go", "wa", "tg", "ig", "fb", "tw", "ds", "lf", "dr", "fu",
+    "wx", "mm", "ts", "vi", "me", "ot", "mt", "nf", "tn", "gf",
+    "acz", "ya", "re", "ep", "dp", "alj", "bnl", "hb",
+}
+
+
 def verify_services_kb(services: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for service in services:
+    popular = [s for s in services if s["code"] in _POPULAR_SERVICES]
+    popular.sort(key=lambda s: s["name"])
+    for service in popular:
         builder.button(
             text=service["name"],
             callback_data=VerifyServiceCB(code=service["code"]),
         )
     builder.adjust(2)
     builder.button(
-        text="⬅️ Назад",
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
         callback_data=CategoryCB(action="back"),
     )
     builder.adjust(1)

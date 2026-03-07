@@ -76,7 +76,7 @@ async def start_verify(callback: CallbackQuery, config):
         return
 
     try:
-        services = await get_services_list(config.hero_sms_api_key)
+        raw = await get_services_list(config.hero_sms_api_key)
     except HeroSMSError as e:
         logger.warning("Hero-SMS getServicesList error: %s", e)
         await callback.answer(
@@ -84,6 +84,9 @@ async def start_verify(callback: CallbackQuery, config):
             show_alert=True,
         )
         return
+
+    # API возвращает {"status": "success", "services": [...]}
+    services = raw.get("services", raw) if isinstance(raw, dict) else raw
 
     await callback.message.edit_text(
         "📱 <b>Верификация по номеру</b>\n\n"
@@ -102,7 +105,7 @@ async def select_service(callback: CallbackQuery, callback_data: VerifyServiceCB
 
     try:
         prices_data = await get_prices(config.hero_sms_api_key, service=service_code)
-        countries_map = await get_countries(config.hero_sms_api_key)
+        countries_raw = await get_countries(config.hero_sms_api_key)
     except HeroSMSError as e:
         logger.warning("Hero-SMS getPrices/getCountries error: %s", e)
         await callback.answer(
@@ -111,6 +114,14 @@ async def select_service(callback: CallbackQuery, callback_data: VerifyServiceCB
         )
         return
 
+    # getCountries возвращает list — конвертируем в dict по id
+    countries_map = {}
+    if isinstance(countries_raw, list):
+        for c in countries_raw:
+            countries_map[c["id"]] = c
+    elif isinstance(countries_raw, dict):
+        countries_map = countries_raw
+
     countries_with_prices = []
     for country_id_str, info in prices_data.items():
         try:
@@ -118,34 +129,32 @@ async def select_service(callback: CallbackQuery, callback_data: VerifyServiceCB
         except (ValueError, TypeError):
             continue
 
-        if isinstance(info, dict):
-            service_info = info.get(service_code, info)
-            if isinstance(service_info, dict):
-                cost_usd = service_info.get("cost", 0)
-                count = service_info.get("count", 0)
-            else:
-                continue
-        else:
+        if not isinstance(info, dict):
             continue
 
-        if count <= 0:
+        service_info = info.get(service_code, info)
+        if not isinstance(service_info, dict):
             continue
 
-        cost_usd = float(cost_usd)
+        cost_usd = float(service_info.get("cost", 0))
+        count = service_info.get("count", 0)
+
+        if count <= 0 or cost_usd <= 0:
+            continue
+
         price_sum = math.ceil(cost_usd * config.usd_rate * 1.6)
 
-        # Получаем название страны из countries_map
-        country_info = countries_map.get(str(country_id), {})
-        if isinstance(country_info, dict):
-            country_name = country_info.get("eng", country_info.get("rus", str(country_id)))
-        else:
-            country_name = str(country_id)
+        country_info = countries_map.get(country_id, {})
+        country_name = country_info.get("eng", str(country_id))
 
         countries_with_prices.append({
             "id": country_id,
             "name": country_name,
             "price": price_sum,
         })
+
+    # Сортируем по названию
+    countries_with_prices.sort(key=lambda x: x["name"])
 
     if not countries_with_prices:
         await callback.answer(
