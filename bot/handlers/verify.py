@@ -13,16 +13,13 @@ from bot.hero_sms import (
     get_number,
     get_status,
     set_status,
-    get_services_list,
     get_countries,
     get_prices,
     HeroSMSError,
 )
 from bot.keyboards import (
     VerifyCB,
-    VerifyServiceCB,
     VerifyCountryCB,
-    verify_services_kb,
     verify_countries_kb,
     verify_number_kb,
 )
@@ -65,7 +62,9 @@ def verify_confirm_kb(order_id: int) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-# ---------- 1. Выбор сервиса ----------
+# ---------- 1. Нажатие "Верификация" → сразу выбор страны (сервис = Google/YouTube/Gmail) ----------
+
+SERVICE_CODE = "go"  # Google, YouTube, Gmail
 
 @router.callback_query(VerifyCB.filter(F.action == "start"))
 async def start_verify(callback: CallbackQuery, config):
@@ -75,33 +74,7 @@ async def start_verify(callback: CallbackQuery, config):
         )
         return
 
-    try:
-        raw = await get_services_list(config.hero_sms_api_key)
-    except HeroSMSError as e:
-        logger.warning("Hero-SMS getServicesList error: %s", e)
-        await callback.answer(
-            "Ошибка загрузки сервисов. Попробуйте позже.",
-            show_alert=True,
-        )
-        return
-
-    # API возвращает {"status": "success", "services": [...]}
-    services = raw.get("services", raw) if isinstance(raw, dict) else raw
-
-    await callback.message.edit_text(
-        "📱 <b>Верификация по номеру</b>\n\n"
-        "Выберите сервис:",
-        reply_markup=verify_services_kb(services),
-        parse_mode="HTML",
-    )
-    await callback.answer()
-
-
-# ---------- 2. Выбор страны ----------
-
-@router.callback_query(VerifyServiceCB.filter())
-async def select_service(callback: CallbackQuery, callback_data: VerifyServiceCB, config):
-    service_code = callback_data.code
+    service_code = SERVICE_CODE
 
     try:
         prices_data = await get_prices(config.hero_sms_api_key, service=service_code)
