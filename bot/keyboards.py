@@ -299,8 +299,10 @@ def smm_types_kb() -> InlineKeyboardMarkup:
 def smm_services_kb(services: list, service_type: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for s in services:
-        name = s["name"]
-        text = f"{name[:35]}..." if len(name) > 35 else name
+        price = s.get("price_sum", 0)
+        min_q = s.get("min", 0)
+        max_q = s.get("max", 0)
+        text = f"{price:,} сум/1000 | {min_q}-{max_q}"
         builder.button(
             text=text,
             callback_data=SmmServiceCB(service_id=s["service"]),

@@ -38,6 +38,18 @@ _smm_data: dict[int, dict] = {}  # order_id -> {service_id, service_name, link, 
 _services_cache: dict[str, list[dict]] = {}
 
 
+# ---------- Back to SMM menu keyboard ----------
+
+
+def _back_to_smm_menu_kb() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
+        callback_data=SmmTypeCB(type="menu"),
+    )
+    return builder.as_markup()
+
+
 # ---------- Admin confirm / reject keyboard ----------
 
 
@@ -105,6 +117,12 @@ async def smm_select_type(callback: CallbackQuery, callback_data: SmmTypeCB, con
         )
         return
 
+    # Pre-calculate prices and cap max at 5000
+    for s in services:
+        rate_usd = float(s.get("rate", 0))
+        s["price_sum"] = math.ceil(rate_usd * config.usd_rate * 1.5)
+        s["max"] = min(int(s.get("max", 0)), 5000)
+
     type_labels = {
         "views": "\U0001f441 \u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b",
         "likes": "\u2764\ufe0f \u041b\u0430\u0439\u043a\u0438",
@@ -152,7 +170,7 @@ async def smm_select_service(
 
     rate_usd = float(service.get("rate", 0))
     min_qty = int(service.get("min", 0))
-    max_qty = int(service.get("max", 0))
+    max_qty = min(int(service.get("max", 0)), 5000)
     name = service.get("name", "Service")
 
     price_per_1000 = math.ceil(rate_usd * config.usd_rate * 1.5)
@@ -164,7 +182,11 @@ async def smm_select_service(
         f"\u041e\u0442\u043f\u0440\u0430\u0432\u044c\u0442\u0435 \u0441\u0441\u044b\u043b\u043a\u0443 \u043d\u0430 \u0432\u0438\u0434\u0435\u043e YouTube:"
     )
 
-    await callback.message.edit_text(text, parse_mode="HTML")
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=_back_to_smm_menu_kb(),
+    )
     await state.set_state(SmmState.waiting_link)
     await state.update_data(
         service_id=service_id,
@@ -172,6 +194,23 @@ async def smm_select_service(
         rate=rate_usd,
         min=min_qty,
         max=max_qty,
+    )
+    await callback.answer()
+
+
+# ---------- 3.5. Back from FSM to SMM menu ----------
+
+
+@router.callback_query(SmmTypeCB.filter(F.type == "menu"), SmmState.waiting_link)
+@router.callback_query(SmmTypeCB.filter(F.type == "menu"), SmmState.waiting_quantity)
+@router.callback_query(SmmTypeCB.filter(F.type == "menu"), SmmState.waiting_receipt)
+async def smm_back_from_fsm(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.edit_text(
+        "\U0001f680 <b>\u041d\u0430\u043a\u0440\u0443\u0442\u043a\u0430 YouTube</b>\n\n"
+        "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0438\u043f:",
+        reply_markup=smm_types_kb(),
+        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -196,7 +235,8 @@ async def smm_receive_link(message: Message, state: FSMContext):
     await state.update_data(link=link)
     await state.set_state(SmmState.waiting_quantity)
     await message.answer(
-        f"\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e (\u043e\u0442 {min_qty} \u0434\u043e {max_qty}):"
+        f"\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e (\u043e\u0442 {min_qty} \u0434\u043e {max_qty}):",
+        reply_markup=_back_to_smm_menu_kb(),
     )
 
 
