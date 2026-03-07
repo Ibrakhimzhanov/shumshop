@@ -101,7 +101,7 @@ async def create_order(
     pool: asyncpg.Pool,
     user_id: int,
     username: str | None,
-    product_id: int,
+    product_id: int | None,
     receipt_file_id: str,
 ) -> asyncpg.Record:
     return await pool.fetchrow(

@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from bot.keyboards import (
     main_menu_reply_kb,
     category_products_kb,
+    youtube_products_kb,
     admin_menu_kb,
     BUTTON_YOUTUBE,
     BUTTON_AI,
@@ -41,7 +42,7 @@ async def btn_youtube(message: Message, db_pool):
     products = await get_products_by_category(db_pool, cat["id"])
     await message.answer(
         "\U0001f3ac <b>YouTube</b>\n\n\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u043e\u0432\u0430\u0440:",
-        reply_markup=category_products_kb(products, cat["id"]),
+        reply_markup=youtube_products_kb(products, cat["id"]),
         parse_mode="HTML",
     )
 

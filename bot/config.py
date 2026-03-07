@@ -13,6 +13,10 @@ class Config:
     database_url: str
     admin_id: int
 
+    hero_sms_api_key: str
+
+    usd_rate: int
+
     # Parsed DB fields
     db_host: str
     db_port: int
@@ -34,12 +38,18 @@ class Config:
             "DATABASE_URL", "postgresql://localhost/botseller"
         )
 
+        hero_sms_api_key = os.getenv("HERO_SMS_API_KEY", "")
+
+        usd_rate = int(os.getenv("USD_RATE", "12800"))
+
         parsed = urlparse(database_url)
 
         return cls(
             bot_token=bot_token,
             database_url=database_url,
             admin_id=int(admin_id_raw),
+            hero_sms_api_key=hero_sms_api_key,
+            usd_rate=usd_rate,
             db_host=parsed.hostname or "localhost",
             db_port=parsed.port or 5432,
             db_name=(parsed.path or "/botseller").lstrip("/"),

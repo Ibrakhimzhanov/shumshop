@@ -23,6 +23,20 @@ class OrderCB(CallbackData, prefix="order"):
     order_id: int = 0
 
 
+class VerifyCB(CallbackData, prefix="vrfy"):
+    action: str = "start"
+    activation_id: int = 0
+
+
+class VerifyServiceCB(CallbackData, prefix="vs"):
+    code: str = ""
+
+
+class VerifyCountryCB(CallbackData, prefix="vc"):
+    service: str = ""
+    country: int = 0
+
+
 class AdminCB(CallbackData, prefix="adm"):
     action: str = ""
     id: int = 0
@@ -58,6 +72,72 @@ def category_products_kb(
     builder.button(
         text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
         callback_data=CategoryCB(action="back"),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def youtube_products_kb(
+    products: list, category_id: int
+) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for p in products:
+        builder.button(
+            text=p["name"],
+            callback_data=ProductCB(action="view", id=p["id"]),
+        )
+    builder.button(
+        text="\U0001f4f1 \u0412\u0435\u0440\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u043f\u043e \u043d\u043e\u043c\u0435\u0440\u0443",
+        callback_data=VerifyCB(action="start"),
+    )
+    builder.button(
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
+        callback_data=CategoryCB(action="back"),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def verify_number_kb(activation_id: int) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="\U0001f50d \u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043a\u043e\u0434",
+        callback_data=VerifyCB(action="check", activation_id=activation_id),
+    )
+    builder.button(
+        text="🔄 Вернуть номер",
+        callback_data=VerifyCB(action="cancel", activation_id=activation_id),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def verify_services_kb(services: list) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for service in services:
+        builder.button(
+            text=service["name"],
+            callback_data=VerifyServiceCB(code=service["code"]),
+        )
+    builder.adjust(2)
+    builder.button(
+        text="⬅️ Назад",
+        callback_data=CategoryCB(action="back"),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def verify_countries_kb(countries: list, service_code: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for country in countries:
+        builder.button(
+            text=f"{country['name']} — {country['price']} сум",
+            callback_data=VerifyCountryCB(service=service_code, country=country["id"]),
+        )
+    builder.button(
+        text="⬅️ Назад",
+        callback_data=VerifyCB(action="start"),
     )
     builder.adjust(1)
     return builder.as_markup()
