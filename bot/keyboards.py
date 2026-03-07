@@ -296,13 +296,22 @@ def smm_types_kb() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def _extract_label(name: str) -> str:
+    """Extract short label from service name, e.g. 'YTL64 YouTube Likes (Music) ...' -> 'Music'."""
+    import re
+    m = re.search(r"\(([^)]+)\)", name)
+    return m.group(1) if m else ""
+
+
 def smm_services_kb(services: list, service_type: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for s in services:
         price = s.get("price_sum", 0)
         min_q = s.get("min", 0)
         max_q = s.get("max", 0)
-        text = f"{price:,} сум/1000 | {min_q}-{max_q}"
+        label = _extract_label(s.get("name", ""))
+        label_part = f"{label} | " if label else ""
+        text = f"{label_part}{price:,} сум/1000 | {min_q}-{max_q}"
         builder.button(
             text=text,
             callback_data=SmmServiceCB(service_id=s["service"]),
