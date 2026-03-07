@@ -76,12 +76,7 @@ async def get_youtube_services(api_key: str) -> dict[str, list[dict]]:
         ]
         filtered.sort(key=lambda s: float(s["rate"]))
 
-        # Pick 5 services with diverse prices (not all cheapest)
-        if len(filtered) > 5:
-            step = max(1, len(filtered) // 5)
-            picked = [filtered[i * step] for i in range(5) if i * step < len(filtered)]
-        else:
-            picked = filtered[:5]
+        picked = filtered[:5]
 
         # Add feature labels
         for s in picked:
