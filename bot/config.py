@@ -14,6 +14,7 @@ class Config:
     admin_id: int
 
     hero_sms_api_key: str
+    smm_raja_api_key: str
 
     usd_rate: int
 
@@ -39,6 +40,7 @@ class Config:
         )
 
         hero_sms_api_key = os.getenv("HERO_SMS_API_KEY", "")
+        smm_raja_api_key = os.getenv("SMM_RAJA_API_KEY", "")
 
         usd_rate = int(os.getenv("USD_RATE", "12800"))
 
@@ -49,6 +51,7 @@ class Config:
             database_url=database_url,
             admin_id=int(admin_id_raw),
             hero_sms_api_key=hero_sms_api_key,
+            smm_raja_api_key=smm_raja_api_key,
             usd_rate=usd_rate,
             db_host=parsed.hostname or "localhost",
             db_port=parsed.port or 5432,

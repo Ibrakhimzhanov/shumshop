@@ -18,12 +18,13 @@ async def main() -> None:
     dp["config"] = config
 
     # Import and register routers
-    from bot.handlers import start, catalog, payment, admin, verify
+    from bot.handlers import start, catalog, payment, admin, verify, smm
 
     dp.include_router(start.router)
     dp.include_router(catalog.router)
     dp.include_router(payment.router)
     dp.include_router(verify.router)
+    dp.include_router(smm.router)
     dp.include_router(admin.router)
 
     pool = await create_pool(config)

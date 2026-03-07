@@ -42,6 +42,19 @@ class AdminCB(CallbackData, prefix="adm"):
     id: int = 0
 
 
+class SmmTypeCB(CallbackData, prefix="smmt"):
+    type: str = ""  # views, likes, subscribers, comments, shorts, shares
+
+
+class SmmServiceCB(CallbackData, prefix="smms"):
+    service_id: int = 0
+
+
+class SmmOrderCB(CallbackData, prefix="smmo"):
+    action: str = "approve"
+    order_id: int = 0
+
+
 BUTTON_YOUTUBE = "\U0001f3ac YouTube"
 BUTTON_AI = "\U0001f916 AI"
 BUTTON_SUPPORT = "\U0001f4de \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430"
@@ -86,6 +99,10 @@ def youtube_products_kb(
             text=p["name"],
             callback_data=ProductCB(action="view", id=p["id"]),
         )
+    builder.button(
+        text="\U0001f680 \u041d\u0430\u043a\u0440\u0443\u0442\u043a\u0430",
+        callback_data=SmmTypeCB(type="menu"),
+    )
     builder.button(
         text="\U0001f4f1 \u0412\u0435\u0440\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u043f\u043e \u043d\u043e\u043c\u0435\u0440\u0443",
         callback_data=VerifyCB(action="start"),
@@ -259,6 +276,40 @@ def admin_product_actions_kb(product_id: int) -> InlineKeyboardMarkup:
         callback_data=AdminCB(action="back_to_prods", id=product_id),
     )
     builder.adjust(2, 1)
+    return builder.as_markup()
+
+
+def smm_types_kb() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="\U0001f441 \u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b", callback_data=SmmTypeCB(type="views"))
+    builder.button(text="\U0001f44d \u041b\u0430\u0439\u043a\u0438", callback_data=SmmTypeCB(type="likes"))
+    builder.button(text="\U0001f465 \u041f\u043e\u0434\u043f\u0438\u0441\u0447\u0438\u043a\u0438", callback_data=SmmTypeCB(type="subscribers"))
+    builder.button(text="\U0001f4ac \u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0438", callback_data=SmmTypeCB(type="comments"))
+    builder.button(text="\U0001f4f1 Shorts \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b", callback_data=SmmTypeCB(type="shorts"))
+    builder.button(text="\U0001f517 \u0428\u0435\u0439\u0440\u044b", callback_data=SmmTypeCB(type="shares"))
+    builder.adjust(2)
+    builder.button(
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
+        callback_data=CategoryCB(action="back"),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def smm_services_kb(services: list, service_type: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for s in services:
+        name = s["name"]
+        text = f"{name[:35]}..." if len(name) > 35 else name
+        builder.button(
+            text=text,
+            callback_data=SmmServiceCB(service_id=s["service"]),
+        )
+    builder.button(
+        text="\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434",
+        callback_data=SmmTypeCB(type="menu"),
+    )
+    builder.adjust(1)
     return builder.as_markup()
 
 
