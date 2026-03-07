@@ -94,6 +94,12 @@ async def delete_product(pool: asyncpg.Pool, product_id: int) -> None:
     await pool.execute("DELETE FROM products WHERE id = $1", product_id)
 
 
+async def get_category_by_name(pool: asyncpg.Pool, name: str) -> asyncpg.Record | None:
+    return await pool.fetchrow(
+        "SELECT * FROM categories WHERE name = $1", name
+    )
+
+
 # --- Orders ---
 
 

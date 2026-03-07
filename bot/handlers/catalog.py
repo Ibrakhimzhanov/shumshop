@@ -7,7 +7,7 @@ from bot.keyboards import (
     category_products_kb,
     product_card_kb,
 )
-from bot.models import get_products_by_category, get_product
+from bot.models import get_products_by_category, get_product, get_category_by_name
 
 router = Router()
 
@@ -28,6 +28,23 @@ async def show_product(callback: CallbackQuery, callback_data: ProductCB, db_poo
     if not product:
         await callback.answer("\u0422\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d", show_alert=True)
         return
+
+    # "Старореги" — показываем подпродукты из скрытой категории
+    if product["name"] == "\u0421\u0442\u0430\u0440\u043e\u0440\u0435\u0433\u0438":
+        sub_cat = await get_category_by_name(db_pool, "\u0421\u0442\u0430\u0440\u043e\u0440\u0435\u0433\u0438 YouTube")
+        if sub_cat:
+            sub_products = await get_products_by_category(db_pool, sub_cat["id"])
+            if sub_products:
+                await callback.message.edit_text(
+                    "\U0001f4e6 <b>\u0421\u0442\u0430\u0440\u043e\u0440\u0435\u0433\u0438</b>\n\n\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u043e\u0432\u0430\u0440:",
+                    reply_markup=category_products_kb(sub_products, sub_cat["id"]),
+                    parse_mode="HTML",
+                )
+                await callback.answer()
+                return
+        await callback.answer("\u0422\u043e\u0432\u0430\u0440\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b", show_alert=True)
+        return
+
     price = f"{product['price']:,} \u0441\u0443\u043c"
     text = (
         f"\U0001f4cc <b>{product['name']}</b>\n\n"
